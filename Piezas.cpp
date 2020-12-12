@@ -20,8 +20,10 @@
  * Constructor sets an empty board (default 3 rows, 4 columns) and 
  * specifies it is X's turn first
 **/
-Piezas::Piezas()
+Piezas::Piezas() 
 {
+	board = std::vector<std::vector<Piece>> (BOARD_ROWS, std::vector<Piece> (BOARD_COLS, Blank));
+	turn = X;
 }
 
 /**
@@ -30,6 +32,8 @@ Piezas::Piezas()
 **/
 void Piezas::reset()
 {
+	board = std::vector<std::vector<Piece>> (BOARD_ROWS, std::vector<Piece> (BOARD_COLS, Blank));
+	turn = X;
 }
 
 /**
@@ -42,6 +46,27 @@ void Piezas::reset()
 **/ 
 Piece Piezas::dropPiece(int column)
 {
+		//if we have a valid column
+		if(column >= 0 && column < BOARD_COLS) {
+				for(int i = 0; i < BOARD_ROWS; i++) {
+					if(board[i][column] == Blank) {
+							//place piece	
+							board[i][column] = turn;
+							//switch turns
+							turn = (turn == O) ? X : O;
+							//return the piece we placed
+							return board[i][column];
+					}
+				}
+		}
+		//else we have an out of bounds coordinate
+		else {
+			//since we can't place a piece we must lose a turn	
+			turn = (turn == O) ? X : O;
+			return Invalid;
+		}
+		//since we can't place a piece we must lose a turn	
+		turn = (turn == O) ? X : O;
     return Blank;
 }
 
@@ -51,6 +76,14 @@ Piece Piezas::dropPiece(int column)
 **/
 Piece Piezas::pieceAt(int row, int column)
 {
+		//Invalid coordinates return invalid
+		if(row < 0 || row > BOARD_ROWS || column < 0 || column > BOARD_COLS) {
+			return Invalid;
+		}
+		//
+		else if(board[row][column] == O || board[row][column] == X) {
+			return board[row][column];
+		}
     return Blank;
 }
 
@@ -65,5 +98,52 @@ Piece Piezas::pieceAt(int row, int column)
 **/
 Piece Piezas::gameState()
 {
-    return Blank;
+		int longestX = 0;
+		int longestO = 0;
+		//loop through the array vertically 	
+		for(int i = 0; i < BOARD_ROWS; i++) {
+			//Use these temporary variables to keep track of the current longest adjecent piece for each row 
+			int x = 0;
+			int o = 0;
+			for(int j = 0; j < BOARD_COLS; j++) {
+				if(pieceAt(i, j) == O) {
+					o++;
+					longestO = (o > longestO) ? o : longestO;
+					x = 0;
+				}
+				else if(pieceAt(i, j) == X) {
+					x++;
+					longestX = (x > longestX) ? x : longestX;
+					o = 0;
+				}
+				else {
+					return Invalid;
+				}
+			}
+		}
+		for(int i = 0; i < BOARD_COLS; i++) {
+			//Use these temporary variables to keep track of the current longest adjecent piece for each column
+			int x = 0;
+			int o = 0;
+			for(int j = 0; j < BOARD_ROWS; j++) {
+				if(pieceAt(j, i) == O) {
+					o++;
+					longestO = (o > longestO) ? o : longestO;
+					x = 0;
+				}
+				else if(pieceAt(j, i) == X) {
+					x++;
+					longestX = (x > longestX) ? x : longestX;
+					o = 0;
+				}
+			}
+		}
+
+		if(longestO > longestX) {
+			return O;
+		}
+		else if (longestX > longestO) {
+			return X;
+		}
+		return Blank;
 }
